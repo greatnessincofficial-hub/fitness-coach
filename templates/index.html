@@ -1,66 +1,152 @@
-Cat > templates/index.html << 'HTMLEOF'
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Fitness Coach</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; background: #0f0f0f; color: #f0f0f0; min-height: 100vh; }
-    header { background: #1a1a2e; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #00d4aa; }
-    header h1 { color: #00d4aa; font-size: 22px; }
-    header span { color: #888; font-size: 13px; }
-    nav { background: #16213e; display: flex; gap: 8px; padding: 12px 24px; overflow-x: auto; }
-    nav button { background: transparent; border: 1px solid #333; color: #aaa; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 13px; white-space: nowrap; }
-    nav button.active, nav button:hover { background: #00d4aa; color: #000; border-color: #00d4aa; font-weight: bold; }
-    .page { display: none; padding: 24px; max-width: 800px; margin: 0 auto; }
+    :root[data-theme="dark"] {
+      --bg: #0f0f0f; --bg2: #1a1a2e; --bg3: #16213e;
+      --text: #f0f0f0; --text2: #aaa; --border: #2a2a4a;
+      --accent: #00d4aa; --accent2: #00b894;
+      --red: #e17055; --blue: #74b9ff; --yellow: #fdcb6e;
+    }
+    :root[data-theme="light"] {
+      --bg: #f0f4f8; --bg2: #ffffff; --bg3: #e8eef5;
+      --text: #1a1a2e; --text2: #555; --border: #d0d8e4;
+      --accent: #00967a; --accent2: #007a63;
+      --red: #d63031; --blue: #0984e3; --yellow: #e17055;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; transition: background 0.3s, color 0.3s; }
+    body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    header { background: var(--bg2); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--accent); }
+    header h1 { color: var(--accent); font-size: 20px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .user-name { color: var(--text2); font-size: 13px; }
+    .theme-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 13px; }
+    nav { background: var(--bg3); display: flex; gap: 6px; padding: 10px 24px; overflow-x: auto; flex-wrap: wrap; }
+    nav button { background: transparent; border: 1px solid var(--border); color: var(--text2); padding: 7px 14px; border-radius: 20px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+    nav button.active, nav button:hover { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
+    .page { display: none; padding: 20px; max-width: 860px; margin: 0 auto; }
     .page.active { display: block; }
-    .card { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 16px; padding: 24px; margin-bottom: 20px; }
-    .card h2 { color: #00d4aa; margin-bottom: 16px; font-size: 18px; }
-    label { display: block; color: #aaa; font-size: 13px; margin-bottom: 4px; margin-top: 12px; }
-    select, input[type="number"], input[type="text"] { width: 100%; padding: 12px; background: #0f0f1a; border: 1px solid #333; border-radius: 8px; color: #f0f0f0; font-size: 15px; }
-    select:focus, input:focus { outline: none; border-color: #00d4aa; }
-    .btn { background: #00d4aa; color: #000; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; margin-top: 16px; width: 100%; }
-    .btn:hover { background: #00b894; }
-    .btn-outline { background: transparent; border: 1px solid #00d4aa; color: #00d4aa; }
-    .btn-outline:hover { background: #00d4aa; color: #000; }
-    .ai-response { background: #0f1a0f; border: 1px solid #00d4aa; border-radius: 8px; padding: 16px; margin-top: 16px; white-space: pre-wrap; line-height: 1.7; font-size: 14px; display: none; }
-    .loading { color: #00d4aa; font-style: italic; text-align: center; padding: 20px; }
-    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
-    .stat-card { background: #16213e; border-radius: 12px; padding: 16px; text-align: center; border: 1px solid #2a2a4a; }
-    .stat-card .value { font-size: 28px; font-weight: bold; color: #00d4aa; }
-    .stat-card .label { font-size: 12px; color: #888; margin-top: 4px; }
-    .log-entry { border-left: 3px solid #00d4aa; padding: 10px 14px; margin: 8px 0; background: #16213e; border-radius: 0 8px 8px 0; font-size: 14px; }
-    .log-entry .date { color: #888; font-size: 12px; }
-    .success { color: #00d4aa; font-weight: bold; margin-top: 10px; text-align: center; }
-    .bmi-result { text-align: center; padding: 20px; }
-    .bmi-number { font-size: 48px; font-weight: bold; color: #00d4aa; }
-    .bmi-category { font-size: 18px; margin-top: 8px; }
-    .bmi-bar { height: 12px; border-radius: 6px; margin: 16px 0; background: linear-gradient(to right, #74b9ff, #00d4aa, #fdcb6e, #e17055); position: relative; }
-    .bmi-marker { position: absolute; top: -4px; width: 20px; height: 20px; background: white; border-radius: 50%; transform: translateX(-50%); border: 2px solid #000; }
-    .timer-display { text-align: center; padding: 20px; }
-    .timer-number { font-size: 72px; font-weight: bold; color: #00d4aa; font-family: monospace; }
-    .timer-btns { display: flex; gap: 12px; margin-top: 16px; }
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+    .card h2 { color: var(--accent); margin-bottom: 14px; font-size: 17px; }
+    label { display: block; color: var(--text2); font-size: 12px; margin-bottom: 3px; margin-top: 10px; }
+    select, input[type="number"], input[type="text"] { width: 100%; padding: 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; }
+    select:focus, input:focus { outline: none; border-color: var(--accent); }
+    .btn { background: var(--accent); color: #000; border: none; padding: 11px 22px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; margin-top: 14px; width: 100%; }
+    .btn:hover { background: var(--accent2); }
+    .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+    .btn-outline:hover { background: var(--accent); color: #000; }
+    .btn-sm { padding: 7px 14px; font-size: 12px; width: auto; margin-top: 0; }
+    .btn-red { background: var(--red); color: white; }
+    .ai-response { background: var(--bg3); border: 1px solid var(--accent); border-radius: 8px; padding: 14px; margin-top: 14px; white-space: pre-wrap; line-height: 1.7; font-size: 13px; display: none; }
+    .loading { color: var(--accent); font-style: italic; text-align: center; padding: 16px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .stat-card { background: var(--bg3); border-radius: 12px; padding: 14px; text-align: center; border: 1px solid var(--border); }
+    .stat-card .value { font-size: 24px; font-weight: bold; color: var(--accent); }
+    .stat-card .label { font-size: 11px; color: var(--text2); margin-top: 3px; }
+    .log-entry { border-left: 3px solid var(--accent); padding: 8px 12px; margin: 6px 0; background: var(--bg3); border-radius: 0 8px 8px 0; font-size: 13px; }
+    .log-entry .date { color: var(--text2); font-size: 11px; }
+    .success { color: var(--accent); font-weight: bold; margin-top: 8px; text-align: center; }
+    .bmi-result { text-align: center; padding: 16px; }
+    .bmi-number { font-size: 44px; font-weight: bold; }
+    .bmi-category { font-size: 16px; margin-top: 6px; }
+    .bmi-bar { height: 10px; border-radius: 5px; margin: 14px 0; background: linear-gradient(to right, #74b9ff, #00d4aa, #fdcb6e, #e17055); position: relative; }
+    .bmi-marker { position: absolute; top: -5px; width: 20px; height: 20px; background: white; border-radius: 50%; transform: translateX(-50%); border: 2px solid #000; }
+    .timer-display { text-align: center; padding: 16px; }
+    .timer-number { font-size: 68px; font-weight: bold; color: var(--accent); font-family: monospace; }
+    .timer-btns { display: flex; gap: 10px; margin-top: 14px; }
     .timer-btns .btn { flex: 1; }
-    .btn-red { background: #e17055; }
-    .btn-red:hover { background: #d63031; }
-    .watch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .watch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .chat-box { height: 340px; overflow-y: auto; background: var(--bg3); border-radius: 10px; padding: 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .msg { padding: 10px 14px; border-radius: 12px; max-width: 80%; font-size: 13px; line-height: 1.5; }
+    .msg.user { background: var(--accent); color: #000; align-self: flex-end; border-radius: 12px 12px 2px 12px; }
+    .msg.ai { background: var(--bg2); color: var(--text); align-self: flex-start; border: 1px solid var(--border); border-radius: 12px 12px 12px 2px; }
+    .chat-input-row { display: flex; gap: 8px; }
+    .chat-input-row input { flex: 1; margin-top: 0; }
+    .chat-input-row .btn { width: auto; margin-top: 0; padding: 10px 18px; }
+    .quote-box { background: var(--bg3); border-left: 4px solid var(--accent); border-radius: 0 12px 12px 0; padding: 16px 20px; font-style: italic; font-size: 15px; color: var(--text); margin-bottom: 14px; }
+    .challenge-box { background: var(--bg3); border: 2px solid var(--yellow); border-radius: 12px; padding: 16px; margin-bottom: 14px; font-size: 14px; }
+    .challenge-box h3 { color: var(--yellow); margin-bottom: 8px; }
+    .record-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+    .record-card { background: var(--bg3); border-radius: 12px; padding: 14px; text-align: center; border: 2px solid var(--yellow); }
+    .record-card .rec-value { font-size: 28px; font-weight: bold; color: var(--yellow); }
+    .record-card .rec-label { font-size: 11px; color: var(--text2); margin-top: 3px; }
+    .record-card .rec-date { font-size: 10px; color: var(--text2); margin-top: 2px; }
+    .muscle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .muscle-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text); padding: 14px; border-radius: 10px; cursor: pointer; font-size: 13px; text-align: center; transition: all 0.2s; }
+    .muscle-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--bg2); }
+    .muscle-response { background: var(--bg3); border: 1px solid var(--accent); border-radius: 8px; padding: 14px; margin-top: 14px; white-space: pre-wrap; font-size: 13px; line-height: 1.7; display: none; }
+    .rest-box { text-align: center; padding: 20px; }
+    .rest-icon { font-size: 48px; margin-bottom: 12px; }
+    .rest-msg { font-size: 16px; line-height: 1.6; }
+    .calorie-goal { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+    .calorie-ring { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
+    .calorie-ring canvas { position: absolute; top: 0; left: 0; }
+    .calorie-ring-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+    .calorie-ring-text .pct { font-size: 18px; font-weight: bold; color: var(--accent); }
+    .calorie-ring-text .sub { font-size: 10px; color: var(--text2); }
+    .flex-row { display: flex; gap: 10px; align-items: flex-end; }
+    .flex-row > * { flex: 1; }
+    .stretch-list { list-style: none; }
+    .stretch-list li { background: var(--bg3); border-radius: 10px; padding: 14px; margin-bottom: 8px; border-left: 3px solid var(--blue); }
+    .stretch-list li strong { color: var(--blue); display: block; margin-bottom: 4px; }
+    .stretch-list li span { font-size: 12px; color: var(--text2); }
   </style>
 </head>
 <body>
 <header>
   <h1>AI Fitness Coach</h1>
-  <span>Powered by AI</span>
+  <div class="header-right">
+    <span class="user-name" id="greeting">Hey there!</span>
+    <button class="theme-btn" onclick="toggleTheme()">Toggle theme</button>
+  </div>
 </header>
 <nav>
-  <button class="active" onclick="showPage('workout', this)">Workout Plan</button>
-  <button onclick="showPage('bmi', this)">BMI Calculator</button>
-  <button onclick="showPage('timer', this)">Workout Timer</button>
-  <button onclick="showPage('watch', this)">Log Activity</button>
+  <button class="active" onclick="showPage('home', this)">Home</button>
+  <button onclick="showPage('workout', this)">Workout Plan</button>
+  <button onclick="showPage('chat', this)">AI Chat</button>
+  <button onclick="showPage('bmi', this)">BMI</button>
+  <button onclick="showPage('timer', this)">Timer</button>
+  <button onclick="showPage('muscles', this)">Muscles</button>
+  <button onclick="showPage('stretch', this)">Stretching</button>
+  <button onclick="showPage('log', this)">Log Activity</button>
   <button onclick="showPage('logs', this)">My Logs</button>
+  <button onclick="showPage('records', this)">Records</button>
+  <button onclick="showPage('settings', this)">Settings</button>
 </nav>
-<div id="page-workout" class="page active">
+
+<!-- HOME -->
+<div id="page-home" class="page active">
+  <div class="quote-box" id="quote-box">Loading your daily motivation...</div>
+  <div class="challenge-box">
+    <h3>Weekly Challenge</h3>
+    <div id="challenge-text">Loading this week's challenge...</div>
+  </div>
+  <div class="stat-grid" id="home-stats"></div>
+  <div class="card">
+    <h2>Calorie goal today</h2>
+    <div class="calorie-goal">
+      <div class="calorie-ring">
+        <canvas id="calorie-ring-canvas" width="100" height="100"></canvas>
+        <div class="calorie-ring-text">
+          <div class="pct" id="calorie-pct">0%</div>
+          <div class="sub">of goal</div>
+        </div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:13px; color:var(--text2)">Today's calories burned</div>
+        <div style="font-size:28px; font-weight:bold; color:var(--accent)" id="today-cal">0</div>
+        <div style="font-size:12px; color:var(--text2)" id="goal-label">Goal: 500 cal</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WORKOUT -->
+<div id="page-workout" class="page">
   <div class="card">
     <h2>Get your AI workout plan</h2>
     <label>Your goal</label>
@@ -71,15 +157,14 @@ Cat > templates/index.html << 'HTMLEOF'
       <option value="build arm muscles">Build arms</option>
       <option value="build leg muscles">Build legs</option>
       <option value="build back muscles">Build back</option>
+      <option value="build shoulder muscles">Build shoulders</option>
+      <option value="full body workout">Full body workout</option>
       <option value="custom weight loss plan">Custom weight loss plan</option>
       <option value="custom weight gain plan">Custom weight gain plan</option>
     </select>
-    <label>Age</label>
-    <input type="number" id="age" placeholder="e.g. 14" />
-    <label>Weight (kg)</label>
-    <input type="number" id="weight" placeholder="e.g. 66" />
-    <label>Height (cm)</label>
-    <input type="number" id="height" placeholder="e.g. 175" />
+    <label>Age</label><input type="number" id="age" placeholder="e.g. 14" />
+    <label>Weight (kg)</label><input type="number" id="weight" placeholder="e.g. 66" />
+    <label>Height (cm)</label><input type="number" id="height" placeholder="e.g. 175" />
     <label>Fitness level</label>
     <select id="level">
       <option value="complete beginner">Complete beginner</option>
@@ -90,30 +175,44 @@ Cat > templates/index.html << 'HTMLEOF'
     <div class="ai-response" id="ai-response"></div>
   </div>
 </div>
+
+<!-- AI CHAT -->
+<div id="page-chat" class="page">
+  <div class="card">
+    <h2>Chat with your AI coach</h2>
+    <div class="chat-box" id="chat-box">
+      <div class="msg ai">Hey! I am your personal AI fitness coach. Ask me anything about workouts, nutrition, or fitness goals!</div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Ask your coach anything..." onkeydown="if(event.key==='Enter') sendChat()" />
+      <button class="btn" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- BMI -->
 <div id="page-bmi" class="page">
   <div class="card">
     <h2>BMI Calculator</h2>
-    <label>Weight (kg)</label>
-    <input type="number" id="bmi-weight" placeholder="e.g. 66" />
-    <label>Height (cm)</label>
-    <input type="number" id="bmi-height" placeholder="e.g. 175" />
+    <label>Weight (kg)</label><input type="number" id="bmi-weight" placeholder="e.g. 66" />
+    <label>Height (cm)</label><input type="number" id="bmi-height" placeholder="e.g. 175" />
     <button class="btn" onclick="calcBMI()">Calculate BMI</button>
     <div class="bmi-result" id="bmi-result" style="display:none">
       <div class="bmi-number" id="bmi-number"></div>
       <div class="bmi-category" id="bmi-category"></div>
       <div class="bmi-bar"><div class="bmi-marker" id="bmi-marker"></div></div>
-      <div id="bmi-advice" style="color:#aaa; font-size:14px; margin-top:8px;"></div>
+      <div id="bmi-advice" style="color:var(--text2); font-size:13px; margin-top:8px;"></div>
     </div>
   </div>
 </div>
+
+<!-- TIMER -->
 <div id="page-timer" class="page">
   <div class="card">
     <h2>Workout Timer</h2>
     <label>Set time (seconds)</label>
-    <input type="number" id="timer-input" placeholder="e.g. 60" value="60" />
-    <div class="timer-display">
-      <div class="timer-number" id="timer-display">01:00</div>
-    </div>
+    <input type="number" id="timer-input" value="60" />
+    <div class="timer-display"><div class="timer-number" id="timer-display">01:00</div></div>
     <div class="timer-btns">
       <button class="btn" onclick="startTimer()">Start</button>
       <button class="btn btn-outline" onclick="pauseTimer()">Pause</button>
@@ -121,10 +220,55 @@ Cat > templates/index.html << 'HTMLEOF'
     </div>
   </div>
 </div>
-<div id="page-watch" class="page">
+
+<!-- MUSCLES -->
+<div id="page-muscles" class="page">
+  <div class="card">
+    <h2>Muscle exercises</h2>
+    <p style="color:var(--text2); font-size:13px; margin-bottom:14px;">Tap a muscle group to get targeted exercises.</p>
+    <div class="muscle-grid">
+      <button class="muscle-btn" onclick="getMuscleExercises('chest')">Chest</button>
+      <button class="muscle-btn" onclick="getMuscleExercises('back')">Back</button>
+      <button class="muscle-btn" onclick="getMuscleExercises('shoulders')">Shoulders</button>
+      <button class="muscle-btn" onclick="getMuscleExercises('biceps')">Biceps</button>
+      <button class="muscle-btn" onclick="getMuscleExercises('triceps')">Triceps</button>
+      <button class="muscle-btn" onclick="getMuscleExercises('abs and core')">Abs / Core</button>
+      <button class="muscle-btn" onclick="getMuscleExercises('quads')">Quads</button>
+      <button class="muscle-btn" onclick="getMuscleExercises('hamstrings')">Hamstrings</button>
+      <button class="muscle-btn" onclick="getMuscleExercises('glutes')">Glutes</button>
+      <button class="muscle-btn" onclick="getMuscleExercises('calves')">Calves</button>
+      <button class="muscle-btn" onclick="getMuscleExercises('forearms')">Forearms</button>
+      <button class="muscle-btn" onclick="getMuscleExercises('full body')">Full Body</button>
+    </div>
+    <div class="muscle-response" id="muscle-response"></div>
+  </div>
+</div>
+
+<!-- STRETCH -->
+<div id="page-stretch" class="page">
+  <div class="card">
+    <h2>Stretching and cooldown</h2>
+    <p style="color:var(--text2); font-size:13px; margin-bottom:14px;">Do these after every workout to prevent injury and soreness.</p>
+    <ul class="stretch-list">
+      <li><strong>Quad stretch</strong><span>Stand on one leg, pull your other foot to your glutes. Hold 30 seconds each side.</span></li>
+      <li><strong>Hamstring stretch</strong><span>Sit on the floor, legs straight, reach for your toes. Hold 30 seconds.</span></li>
+      <li><strong>Hip flexor stretch</strong><span>Lunge forward, drop your back knee to the floor. Hold 30 seconds each side.</span></li>
+      <li><strong>Chest opener</strong><span>Clasp hands behind your back, squeeze shoulder blades, lift arms. Hold 20 seconds.</span></li>
+      <li><strong>Shoulder cross stretch</strong><span>Pull one arm across your chest, hold with the other arm. 20 seconds each side.</span></li>
+      <li><strong>Tricep stretch</strong><span>Reach one arm overhead, bend at elbow, push gently with other hand. 20 seconds each side.</span></li>
+      <li><strong>Child's pose</strong><span>Kneel, sit back on heels, stretch arms forward on the floor. Hold 45 seconds.</span></li>
+      <li><strong>Cat-cow stretch</strong><span>On all fours, alternate arching and rounding your back. 10 slow reps.</span></li>
+      <li><strong>Neck rolls</strong><span>Slowly roll your neck in a circle, 5 times each direction.</span></li>
+      <li><strong>Standing calf stretch</strong><span>Press one foot flat against a wall, lean in gently. Hold 30 seconds each side.</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- LOG -->
+<div id="page-log" class="page">
   <div class="card">
     <h2>Log your activity</h2>
-    <p style="color:#888; font-size:13px; margin-bottom:16px;">Check your watch or phone and enter today's stats below.</p>
+    <p style="color:var(--text2); font-size:12px; margin-bottom:14px;">Check your watch or phone and enter today's stats.</p>
     <div class="watch-grid">
       <div><label>Exercise type</label><input type="text" id="exercise" placeholder="e.g. Running" /></div>
       <div><label>Duration (mins)</label><input type="number" id="duration" placeholder="e.g. 30" /></div>
@@ -136,119 +280,320 @@ Cat > templates/index.html << 'HTMLEOF'
     <button class="btn" onclick="logActivity()">Log it!</button>
     <div id="log-status"></div>
   </div>
+  <div class="card">
+    <h2>Rest day detector</h2>
+    <p style="color:var(--text2); font-size:12px; margin-bottom:14px;">Based on your recent activity, should you rest today?</p>
+    <button class="btn btn-outline" onclick="checkRest()">Check if I should rest</button>
+    <div class="rest-box" id="rest-result" style="display:none">
+      <div class="rest-icon" id="rest-icon"></div>
+      <div class="rest-msg" id="rest-msg"></div>
+    </div>
+  </div>
 </div>
+
+<!-- LOGS -->
 <div id="page-logs" class="page">
   <div class="stat-grid" id="stats-grid"></div>
   <div class="card">
-    <h2>Activity history</h2>
-    <button class="btn btn-outline" onclick="viewLogs()" style="width:auto; padding:8px 20px; margin-bottom:16px;">Refresh logs</button>
+    <h2>Progress chart (last 7 days)</h2>
+    <canvas id="progress-chart" height="120"></canvas>
+  </div>
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <h2 style="margin:0">Activity history</h2>
+      <a href="/export" style="text-decoration:none"><button class="btn btn-outline btn-sm">Export CSV</button></a>
+    </div>
     <div id="logs-display"></div>
   </div>
 </div>
+
+<!-- RECORDS -->
+<div id="page-records" class="page">
+  <div class="card">
+    <h2>Personal records</h2>
+    <p style="color:var(--text2); font-size:12px; margin-bottom:14px;">Your all-time best stats from logged activities.</p>
+    <div class="record-grid" id="records-grid"></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="page-settings" class="page">
+  <div class="card">
+    <h2>Your profile</h2>
+    <label>Your name</label>
+    <input type="text" id="set-name" placeholder="e.g. Vihaank" />
+    <label>Daily calorie burn goal</label>
+    <input type="number" id="set-calgoal" placeholder="e.g. 500" />
+    <button class="btn" onclick="saveSettings()">Save settings</button>
+    <div id="settings-status"></div>
+  </div>
+</div>
+
 <script>
-  function showPage(name, btn) {
-    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-    document.querySelectorAll('nav button').forEach(function(b) { b.classList.remove('active'); });
-    document.getElementById('page-' + name).classList.add('active');
-    btn.classList.add('active');
-    if (name === 'logs') viewLogs();
+var chatHistory = [];
+var timerInterval, timerSeconds, timerRunning = false;
+var progressChart = null;
+var calorieRingChart = null;
+
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('nav button').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('page-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'logs') loadLogs();
+  if (name === 'records') loadRecords();
+  if (name === 'home') loadHome();
+}
+
+function toggleTheme() {
+  var html = document.documentElement;
+  html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+
+async function loadSettings() {
+  var res = await fetch('/settings');
+  var s = await res.json();
+  if (s.name) {
+    document.getElementById('greeting').textContent = 'Hey, ' + s.name + '!';
+    document.getElementById('set-name').value = s.name;
   }
-  async function askCoach() {
-    var goal = document.getElementById('goal').value;
-    var age = document.getElementById('age').value;
-    var weight = document.getElementById('weight').value;
-    var height = document.getElementById('height').value;
-    var level = document.getElementById('level').value;
-    var details = 'Age: ' + age + ', Weight: ' + weight + 'kg, Height: ' + height + 'cm, Level: ' + level;
-    var box = document.getElementById('ai-response');
-    box.style.display = 'block';
-    box.innerHTML = '<span class="loading">Your AI coach is thinking...</span>';
-    var res = await fetch('/ask', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({goal: goal, details: details})
-    });
-    var data = await res.json();
-    box.textContent = data.response;
-  }
-  function calcBMI() {
-    var weight = parseFloat(document.getElementById('bmi-weight').value);
-    var height = parseFloat(document.getElementById('bmi-height').value) / 100;
-    if (!weight || !height) return;
-    var bmi = (weight / (height * height)).toFixed(1);
-    var category, color, advice;
-    if (bmi < 18.5) { category = 'Underweight'; color = '#74b9ff'; advice = 'Consider a weight gain plan and consult a doctor.'; }
-    else if (bmi < 25) { category = 'Healthy weight'; color = '#00d4aa'; advice = 'Great! Keep up your healthy lifestyle.'; }
-    else if (bmi < 30) { category = 'Overweight'; color = '#fdcb6e'; advice = 'A weight loss plan and regular exercise can help.'; }
-    else { category = 'Obese'; color = '#e17055'; advice = 'Please consult a doctor and consider a structured plan.'; }
-    document.getElementById('bmi-number').textContent = bmi;
-    document.getElementById('bmi-number').style.color = color;
-    document.getElementById('bmi-category').textContent = category;
-    document.getElementById('bmi-category').style.color = color;
-    document.getElementById('bmi-advice').textContent = advice;
-    var pct = Math.min(Math.max((bmi - 15) / 25 * 100, 0), 100);
-    document.getElementById('bmi-marker').style.left = pct + '%';
-    document.getElementById('bmi-result').style.display = 'block';
-  }
-  var timerInterval, timerSeconds, timerRunning = false;
-  function updateTimerDisplay(s) {
-    var m = Math.floor(s / 60).toString().padStart(2, '0');
-    var sec = (s % 60).toString().padStart(2, '0');
-    document.getElementById('timer-display').textContent = m + ':' + sec;
-  }
-  function startTimer() {
-    if (timerRunning) return;
-    if (!timerSeconds) timerSeconds = parseInt(document.getElementById('timer-input').value);
-    timerRunning = true;
-    timerInterval = setInterval(function() {
-      timerSeconds--;
-      updateTimerDisplay(timerSeconds);
-      if (timerSeconds <= 0) { clearInterval(timerInterval); timerRunning = false; document.getElementById('timer-display').textContent = 'Done!'; }
-    }, 1000);
-  }
-  function pauseTimer() { clearInterval(timerInterval); timerRunning = false; }
-  function resetTimer() {
-    clearInterval(timerInterval); timerRunning = false; timerSeconds = null;
-    updateTimerDisplay(parseInt(document.getElementById('timer-input').value) || 0);
-  }
-  document.getElementById('timer-input').addEventListener('input', function() {
-    if (!timerRunning) { timerSeconds = null; updateTimerDisplay(parseInt(this.value) || 0); }
+  if (s.calgoal) document.getElementById('set-calgoal').value = s.calgoal;
+  return s;
+}
+
+async function saveSettings() {
+  var name = document.getElementById('set-name').value;
+  var calgoal = document.getElementById('set-calgoal').value;
+  await fetch('/settings', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name: name, calgoal: calgoal})
   });
-  async function logActivity() {
-    var entry = {
-      exercise: document.getElementById('exercise').value,
-      duration: document.getElementById('duration').value,
-      calories: document.getElementById('calories').value,
-      steps: document.getElementById('steps').value,
-      heartrate: document.getElementById('heartrate').value,
-      distance: document.getElementById('distance').value
-    };
-    await fetch('/log', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(entry)
-    });
-    document.getElementById('log-status').innerHTML = '<p class="success">Logged! Great work today!</p>';
-    ['exercise','duration','calories','steps','heartrate','distance'].forEach(function(id) { document.getElementById(id).value = ''; });
+  if (name) document.getElementById('greeting').textContent = 'Hey, ' + name + '!';
+  document.getElementById('settings-status').innerHTML = '<p class="success">Settings saved!</p>';
+}
+
+async function loadHome() {
+  var res = await fetch('/quote');
+  var d = await res.json();
+  document.getElementById('quote-box').textContent = d.quote;
+  var res2 = await fetch('/challenge');
+  var d2 = await res2.json();
+  document.getElementById('challenge-text').textContent = d2.challenge;
+  var logsRes = await fetch('/logs');
+  var logs = await logsRes.json();
+  var s = await loadSettings();
+  var goal = parseInt(s.calgoal) || 500;
+  var today = new Date().toISOString().slice(0,10);
+  var todayLogs = logs.filter(function(l) { return l.date === today; });
+  var todayCal = todayLogs.reduce(function(a, l) { return a + (parseInt(l.calories) || 0); }, 0);
+  var pct = Math.min(Math.round(todayCal / goal * 100), 100);
+  document.getElementById('today-cal').textContent = todayCal;
+  document.getElementById('calorie-pct').textContent = pct + '%';
+  document.getElementById('goal-label').textContent = 'Goal: ' + goal + ' cal';
+  var ctx = document.getElementById('calorie-ring-canvas').getContext('2d');
+  if (calorieRingChart) calorieRingChart.destroy();
+  calorieRingChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: { datasets: [{ data: [pct, 100-pct], backgroundColor: ['#00d4aa', '#2a2a4a'], borderWidth: 0 }] },
+    options: { cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: false } }, animation: { duration: 800 } }
+  });
+  document.getElementById('home-stats').innerHTML =
+    '<div class="stat-card"><div class="value">' + logs.length + '</div><div class="label">Total workouts</div></div>' +
+    '<div class="stat-card"><div class="value">' + logs.reduce(function(a,l){return a+(parseInt(l.calories)||0);},0).toLocaleString() + '</div><div class="label">Total calories</div></div>' +
+    '<div class="stat-card"><div class="value">' + logs.reduce(function(a,l){return a+(parseInt(l.steps)||0);},0).toLocaleString() + '</div><div class="label">Total steps</div></div>';
+}
+
+async function askCoach() {
+  var goal = document.getElementById('goal').value;
+  var age = document.getElementById('age').value;
+  var weight = document.getElementById('weight').value;
+  var height = document.getElementById('height').value;
+  var level = document.getElementById('level').value;
+  var details = 'Age: '+age+', Weight: '+weight+'kg, Height: '+height+'cm, Level: '+level;
+  var box = document.getElementById('ai-response');
+  box.style.display = 'block';
+  box.innerHTML = '<span class="loading">Your AI coach is thinking...</span>';
+  var res = await fetch('/ask', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({goal: goal, details: details})
+  });
+  var data = await res.json();
+  box.textContent = data.response;
+}
+
+async function sendChat() {
+  var input = document.getElementById('chat-input');
+  var msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+  var box = document.getElementById('chat-box');
+  box.innerHTML += '<div class="msg user">' + msg + '</div>';
+  chatHistory.push({role: 'user', content: msg});
+  box.innerHTML += '<div class="msg ai" id="thinking">Thinking...</div>';
+  box.scrollTop = box.scrollHeight;
+  var res = await fetch('/chat', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({messages: chatHistory})
+  });
+  var data = await res.json();
+  document.getElementById('thinking').remove();
+  chatHistory.push({role: 'assistant', content: data.response});
+  box.innerHTML += '<div class="msg ai">' + data.response + '</div>';
+  box.scrollTop = box.scrollHeight;
+}
+
+function calcBMI() {
+  var weight = parseFloat(document.getElementById('bmi-weight').value);
+  var height = parseFloat(document.getElementById('bmi-height').value) / 100;
+  if (!weight || !height) return;
+  var bmi = (weight / (height * height)).toFixed(1);
+  var category, color, advice;
+  if (bmi < 18.5) { category = 'Underweight'; color = '#74b9ff'; advice = 'Consider a weight gain plan and consult a doctor.'; }
+  else if (bmi < 25) { category = 'Healthy weight'; color = '#00d4aa'; advice = 'Great! Keep up your healthy lifestyle.'; }
+  else if (bmi < 30) { category = 'Overweight'; color = '#fdcb6e'; advice = 'A weight loss plan and regular exercise can help.'; }
+  else { category = 'Obese'; color = '#e17055'; advice = 'Please consult a doctor and consider a structured plan.'; }
+  document.getElementById('bmi-number').textContent = bmi;
+  document.getElementById('bmi-number').style.color = color;
+  document.getElementById('bmi-category').textContent = category;
+  document.getElementById('bmi-category').style.color = color;
+  document.getElementById('bmi-advice').textContent = advice;
+  var pct = Math.min(Math.max((bmi - 15) / 25 * 100, 0), 100);
+  document.getElementById('bmi-marker').style.left = pct + '%';
+  document.getElementById('bmi-result').style.display = 'block';
+}
+
+function updateTimerDisplay(s) {
+  var m = Math.floor(s/60).toString().padStart(2,'0');
+  var sec = (s%60).toString().padStart(2,'0');
+  document.getElementById('timer-display').textContent = m+':'+sec;
+}
+function startTimer() {
+  if (timerRunning) return;
+  if (!timerSeconds) timerSeconds = parseInt(document.getElementById('timer-input').value);
+  timerRunning = true;
+  timerInterval = setInterval(function() {
+    timerSeconds--;
+    updateTimerDisplay(timerSeconds);
+    if (timerSeconds <= 0) { clearInterval(timerInterval); timerRunning = false; document.getElementById('timer-display').textContent = 'Done!'; }
+  }, 1000);
+}
+function pauseTimer() { clearInterval(timerInterval); timerRunning = false; }
+function resetTimer() {
+  clearInterval(timerInterval); timerRunning = false; timerSeconds = null;
+  updateTimerDisplay(parseInt(document.getElementById('timer-input').value) || 0);
+}
+document.getElementById('timer-input').addEventListener('input', function() {
+  if (!timerRunning) { timerSeconds = null; updateTimerDisplay(parseInt(this.value) || 0); }
+});
+
+async function getMuscleExercises(muscle) {
+  var box = document.getElementById('muscle-response');
+  box.style.display = 'block';
+  box.textContent = 'Loading exercises for ' + muscle + '...';
+  var res = await fetch('/chat', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({messages: [{role: 'user', content: 'Give me 5 effective exercises for ' + muscle + ' with sets, reps, and brief form tips. Be concise and beginner friendly.'}]})
+  });
+  var data = await res.json();
+  box.textContent = data.response;
+}
+
+async function logActivity() {
+  var entry = {
+    exercise: document.getElementById('exercise').value,
+    duration: document.getElementById('duration').value,
+    calories: document.getElementById('calories').value,
+    steps: document.getElementById('steps').value,
+    heartrate: document.getElementById('heartrate').value,
+    distance: document.getElementById('distance').value
+  };
+  await fetch('/log', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(entry)
+  });
+  document.getElementById('log-status').innerHTML = '<p class="success">Logged! Great work today!</p>';
+  ['exercise','duration','calories','steps','heartrate','distance'].forEach(function(id) { document.getElementById(id).value = ''; });
+}
+
+async function checkRest() {
+  var res = await fetch('/logs');
+  var logs = await res.json();
+  var recent = logs.slice(0, 3);
+  var totalMins = recent.reduce(function(a,l){return a+(parseInt(l.duration)||0);},0);
+  var result = document.getElementById('rest-result');
+  result.style.display = 'block';
+  if (recent.length < 2) {
+    document.getElementById('rest-icon').textContent = 'Keep going!';
+    document.getElementById('rest-msg').textContent = 'You have only logged ' + recent.length + ' workout(s). Keep pushing — you are just getting started!';
+  } else if (totalMins > 150) {
+    document.getElementById('rest-icon').textContent = 'Rest day recommended';
+    document.getElementById('rest-msg').textContent = 'You have worked out ' + totalMins + ' minutes in your last 3 sessions. Your muscles need time to recover — take a rest day or do light stretching today!';
+  } else {
+    document.getElementById('rest-icon').textContent = 'You are good to go!';
+    document.getElementById('rest-msg').textContent = 'Your recent activity looks balanced. You are ready to train today!';
   }
-  async function viewLogs() {
-    var res = await fetch('/logs');
-    var logs = await res.json();
-    var display = document.getElementById('logs-display');
-    if (logs.length === 0) { display.innerHTML = '<p style="color:#888">No activities logged yet. Get moving!</p>'; return; }
-    var totalCal = logs.reduce(function(s, l) { return s + (parseInt(l.calories) || 0); }, 0);
-    var totalMin = logs.reduce(function(s, l) { return s + (parseInt(l.duration) || 0); }, 0);
-    var totalSteps = logs.reduce(function(s, l) { return s + (parseInt(l.steps) || 0); }, 0);
-    document.getElementById('stats-grid').innerHTML =
-      '<div class="stat-card"><div class="value">' + logs.length + '</div><div class="label">Workouts logged</div></div>' +
-      '<div class="stat-card"><div class="value">' + totalCal.toLocaleString() + '</div><div class="label">Total calories</div></div>' +
-      '<div class="stat-card"><div class="value">' + totalMin + '</div><div class="label">Total minutes</div></div>' +
-      '<div class="stat-card"><div class="value">' + totalSteps.toLocaleString() + '</div><div class="label">Total steps</div></div>';
-    display.innerHTML = logs.slice().reverse().map(function(l) {
-      return '<div class="log-entry"><div class="date">' + l.date + '</div><strong>' + (l.exercise || 'Activity') + '</strong> — ' + (l.duration || 0) + ' mins · ' + (l.calories || 0) + ' cal · ' + (l.steps || 0) + ' steps</div>';
-    }).join('');
+}
+
+async function loadLogs() {
+  var res = await fetch('/logs');
+  var logs = await res.json();
+  var display = document.getElementById('logs-display');
+  if (logs.length === 0) { display.innerHTML = '<p style="color:var(--text2)">No activities logged yet.</p>'; return; }
+  var totalCal = logs.reduce(function(s,l){return s+(parseInt(l.calories)||0);},0);
+  var totalMin = logs.reduce(function(s,l){return s+(parseInt(l.duration)||0);},0);
+  var totalSteps = logs.reduce(function(s,l){return s+(parseInt(l.steps)||0);},0);
+  document.getElementById('stats-grid').innerHTML =
+    '<div class="stat-card"><div class="value">'+logs.length+'</div><div class="label">Workouts</div></div>'+
+    '<div class="stat-card"><div class="value">'+totalCal.toLocaleString()+'</div><div class="label">Calories</div></div>'+
+    '<div class="stat-card"><div class="value">'+totalMin+'</div><div class="label">Minutes</div></div>'+
+    '<div class="stat-card"><div class="value">'+totalSteps.toLocaleString()+'</div><div class="label">Steps</div></div>';
+  var weekly = await (await fetch('/weekly')).json();
+  var labels = weekly.map(function(l){return l.date ? l.date.slice(5) : '';}).reverse();
+  var calData = weekly.map(function(l){return parseInt(l.calories)||0;}).reverse();
+  var stepData = weekly.map(function(l){return parseInt(l.steps)||0;}).reverse();
+  var ctx = document.getElementById('progress-chart').getContext('2d');
+  if (progressChart) progressChart.destroy();
+  progressChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'Calories', data: calData, backgroundColor: '#00d4aa88', borderColor: '#00d4aa', borderWidth: 1 },
+        { label: 'Steps', data: stepData, backgroundColor: '#74b9ff88', borderColor: '#74b9ff', borderWidth: 1, yAxisID: 'y2' }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { ticks: { color: '#aaa' }, grid: { color: '#2a2a4a' } },
+        y2: { position: 'right', ticks: { color: '#74b9ff' }, grid: { display: false } },
+        x: { ticks: { color: '#aaa' }, grid: { color: '#2a2a4a' } }
+      },
+      plugins: { legend: { labels: { color: '#aaa' } } }
+    }
+  });
+  display.innerHTML = logs.slice().reverse().map(function(l) {
+    return '<div class="log-entry"><div class="date">'+l.date+'</div><strong>'+(l.exercise||'Activity')+'</strong> — '+(l.duration||0)+' mins · '+(l.calories||0)+' cal · '+(l.steps||0)+' steps</div>';
+  }).join('');
+}
+
+async function loadRecords() {
+  var res = await fetch('/records');
+  var records = await res.json();
+  var grid = document.getElementById('records-grid');
+  if (records.length === 0) {
+    grid.innerHTML = '<p style="color:var(--text2)">No records yet — start logging activities!</p>';
+    return;
   }
+  var labels = { max_calories: 'Best calories burned', max_steps: 'Most steps', max_duration: 'Longest workout (mins)' };
+  grid.innerHTML = records.map(function(r) {
+    return '<div class="record-card"><div class="rec-value">'+Math.round(r.value).toLocaleString()+'</div><div class="rec-label">'+(labels[r.type]||r.type)+'</div><div class="rec-date">'+r.date+'</div></div>';
+  }).join('');
+}
+
+loadSettings();
+loadHome();
 </script>
 </body>
 </html>
-HTMLEOF
