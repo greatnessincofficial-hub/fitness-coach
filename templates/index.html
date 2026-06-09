@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Fitness Coach</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background: #f5f5f5; }
+    h1 { color: #2d6a4f; }
+    h2 { color: #1b4332; }
+    .card { background: white; padding: 20px; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    button { background: #2d6a4f; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 8px; }
+    button:hover { background: #1b4332; }
+    select, input { width: 100%; padding: 10px; margin: 6px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; box-sizing: border-box; }
+    #ai-response { background: #e9f5ee; padding: 15px; border-radius: 8px; white-space: pre-wrap; margin-top: 15px; line-height: 1.6; }
+    .loading { color: #888; font-style: italic; }
+    .success { color: #2d6a4f; font-weight: bold; margin-top: 10px; }
+    .log-entry { border-left: 3px solid #2d6a4f; padding: 8px 12px; margin: 8px 0; background: #f0faf4; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+  <h1>AI Fitness Coach</h1>
+
+  <div class="card">
+    <h2>Get your workout plan</h2>
+    <select id="goal">
+      <option value="six pack abs">Six pack abs</option>
+      <option value="lose weight">Lose weight</option>
+      <option value="build chest muscles">Build chest</option>
+      <option value="build arm muscles">Build arms</option>
+      <option value="build leg muscles">Build legs</option>
+      <option value="build back muscles">Build back</option>
+      <option value="custom weight loss plan">Custom weight loss plan</option>
+      <option value="custom weight gain plan">Custom weight gain plan</option>
+    </select>
+    <input type="number" id="age" placeholder="Your age" />
+    <input type="number" id="weight" placeholder="Your weight (kg)" />
+    <input type="number" id="height" placeholder="Your height (cm)" />
+    <select id="level">
+      <option value="complete beginner">Complete beginner</option>
+      <option value="intermediate">Intermediate</option>
+      <option value="advanced">Advanced</option>
+    </select>
+    <button onclick="askCoach()">Get my plan!</button>
+    <div id="ai-response"></div>
+  </div>
+
+  <div class="card">
+    <h2>Log today's activity</h2>
+    <input type="text" id="exercise" placeholder="Exercise (e.g. Running, Push-ups)" />
+    <input type="number" id="duration" placeholder="Duration (minutes)" />
+    <input type="number" id="calories" placeholder="Calories burned (estimate)" />
+    <button onclick="logActivity()">Log it!</button>
+    <div id="log-status"></div>
+  </div>
+
+  <div class="card">
+    <h2>My activity log</h2>
+    <button onclick="viewLogs()">Show my logs</button>
+    <div id="logs-display"></div>
+  </div>
+
+  <script>
+    async function askCoach() {
+      const goal = document.getElementById('goal').value;
+      const age = document.getElementById('age').value;
+      const weight = document.getElementById('weight').value;
+      const height = document.getElementById('height').value;
+      const level = document.getElementById('level').value;
+      const details = `Age: ${age}, Weight: ${weight}kg, Height: ${height}cm, Level: ${level}`;
+      document.getElementById('ai-response').innerHTML = '<span class="loading">Your AI coach is thinking...</span>';
+      const res = await fetch('/ask', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({goal, details})
+      });
+      const data = await res.json();
+      document.getElementById('ai-response').textContent = data.response;
+    }
+
+    async function logActivity() {
+      const exercise = document.getElementById('exercise').value;
+      const duration = document.getElementById('duration').value;
+      const calories = document.getElementById('calories').value;
+      await fetch('/log', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({exercise, duration, calories})
+      });
+      document.getElementById('log-status').innerHTML = '<p class="success">Logged! Great work today!</p>';
+      document.getElementById('exercise').value = '';
+      document.getElementById('duration').value = '';
+      document.getElementById('calories').value = '';
+    }
+
+    async function viewLogs() {
+      const res = await fetch('/logs');
+      const logs = await res.json();
+      const display = document.getElementById('logs-display');
+      if (logs.length === 0) {
+        display.innerHTML = '<p>No activities logged yet. Get moving!</p>';
+      } else {
+        display.innerHTML = logs.map(l =>
+          `<div class="log-entry"><strong>${l.date}</strong> — ${l.exercise} for ${l.duration} mins (${l.calories} cal)</div>`
+        ).join('');
+      }
+    }
+  </script>
+
+</body>
+</html>
