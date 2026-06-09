@@ -1,9 +1,11 @@
 import os
-from flask import Flask, render_template, request, jsonify
+import requests
+from flask import Flask, render_template, request, jsonify, redirect, session
 from groq import Groq
 from datetime import date
 
 app = Flask(__name__)
+app.secret_key = "fitness-coach-secret"
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 activity_log = []
@@ -36,7 +38,10 @@ def log_activity():
         "date": str(date.today()),
         "exercise": data.get("exercise"),
         "duration": data.get("duration"),
-        "calories": data.get("calories")
+        "calories": data.get("calories"),
+        "steps": data.get("steps"),
+        "heartrate": data.get("heartrate"),
+        "distance": data.get("distance")
     }
     activity_log.append(entry)
     return jsonify({"status": "logged", "entry": entry})

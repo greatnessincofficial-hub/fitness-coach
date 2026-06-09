@@ -2,27 +2,72 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Fitness Coach</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background: #f5f5f5; }
-    h1 { color: #2d6a4f; }
-    h2 { color: #1b4332; }
-    .card { background: white; padding: 20px; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    button { background: #2d6a4f; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; margin-top: 8px; }
-    button:hover { background: #1b4332; }
-    select, input { width: 100%; padding: 10px; margin: 6px 0; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; box-sizing: border-box; }
-    #ai-response { background: #e9f5ee; padding: 15px; border-radius: 8px; white-space: pre-wrap; margin-top: 15px; line-height: 1.6; }
-    .loading { color: #888; font-style: italic; }
-    .success { color: #2d6a4f; font-weight: bold; margin-top: 10px; }
-    .log-entry { border-left: 3px solid #2d6a4f; padding: 8px 12px; margin: 8px 0; background: #f0faf4; border-radius: 4px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #0f0f0f; color: #f0f0f0; min-height: 100vh; }
+    header { background: #1a1a2e; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #00d4aa; }
+    header h1 { color: #00d4aa; font-size: 22px; }
+    header span { color: #888; font-size: 13px; }
+    nav { background: #16213e; display: flex; gap: 8px; padding: 12px 24px; overflow-x: auto; }
+    nav button { background: transparent; border: 1px solid #333; color: #aaa; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+    nav button.active, nav button:hover { background: #00d4aa; color: #000; border-color: #00d4aa; font-weight: bold; }
+    .page { display: none; padding: 24px; max-width: 800px; margin: 0 auto; }
+    .page.active { display: block; }
+    .card { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+    .card h2 { color: #00d4aa; margin-bottom: 16px; font-size: 18px; }
+    label { display: block; color: #aaa; font-size: 13px; margin-bottom: 4px; margin-top: 12px; }
+    select, input[type="number"], input[type="text"] { width: 100%; padding: 12px; background: #0f0f1a; border: 1px solid #333; border-radius: 8px; color: #f0f0f0; font-size: 15px; }
+    select:focus, input:focus { outline: none; border-color: #00d4aa; }
+    .btn { background: #00d4aa; color: #000; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; margin-top: 16px; width: 100%; }
+    .btn:hover { background: #00b894; }
+    .btn-outline { background: transparent; border: 1px solid #00d4aa; color: #00d4aa; }
+    .btn-outline:hover { background: #00d4aa; color: #000; }
+    .ai-response { background: #0f1a0f; border: 1px solid #00d4aa; border-radius: 8px; padding: 16px; margin-top: 16px; white-space: pre-wrap; line-height: 1.7; font-size: 14px; display: none; }
+    .loading { color: #00d4aa; font-style: italic; text-align: center; padding: 20px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: #16213e; border-radius: 12px; padding: 16px; text-align: center; border: 1px solid #2a2a4a; }
+    .stat-card .value { font-size: 28px; font-weight: bold; color: #00d4aa; }
+    .stat-card .label { font-size: 12px; color: #888; margin-top: 4px; }
+    .log-entry { border-left: 3px solid #00d4aa; padding: 10px 14px; margin: 8px 0; background: #16213e; border-radius: 0 8px 8px 0; font-size: 14px; }
+    .log-entry .date { color: #888; font-size: 12px; }
+    .success { color: #00d4aa; font-weight: bold; margin-top: 10px; text-align: center; }
+    .error { color: #ff6b6b; margin-top: 10px; text-align: center; }
+    .bmi-result { text-align: center; padding: 20px; }
+    .bmi-number { font-size: 48px; font-weight: bold; color: #00d4aa; }
+    .bmi-category { font-size: 18px; margin-top: 8px; }
+    .bmi-bar { height: 12px; border-radius: 6px; margin: 16px 0; background: linear-gradient(to right, #74b9ff, #00d4aa, #fdcb6e, #e17055); position: relative; }
+    .bmi-marker { position: absolute; top: -4px; width: 20px; height: 20px; background: white; border-radius: 50%; transform: translateX(-50%); border: 2px solid #000; }
+    .timer-display { text-align: center; padding: 20px; }
+    .timer-number { font-size: 72px; font-weight: bold; color: #00d4aa; font-family: monospace; }
+    .timer-btns { display: flex; gap: 12px; margin-top: 16px; }
+    .timer-btns .btn { flex: 1; }
+    .btn-red { background: #e17055; }
+    .btn-red:hover { background: #d63031; }
+    .watch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   </style>
 </head>
 <body>
 
+<header>
   <h1>AI Fitness Coach</h1>
+  <span>Powered by AI</span>
+</header>
 
+<nav>
+  <button class="active" onclick="showPage('workout')">Workout Plan</button>
+  <button onclick="showPage('bmi')">BMI Calculator</button>
+  <button onclick="showPage('timer')">Workout Timer</button>
+  <button onclick="showPage('watch')">Log Activity</button>
+  <button onclick="showPage('logs')">My Logs</button>
+</nav>
+
+<!-- WORKOUT PAGE -->
+<div id="page-workout" class="page active">
   <div class="card">
-    <h2>Get your workout plan</h2>
+    <h2>Get your AI workout plan</h2>
+    <label>Your goal</label>
     <select id="goal">
       <option value="six pack abs">Six pack abs</option>
       <option value="lose weight">Lose weight</option>
@@ -33,79 +78,464 @@
       <option value="custom weight loss plan">Custom weight loss plan</option>
       <option value="custom weight gain plan">Custom weight gain plan</option>
     </select>
-    <input type="number" id="age" placeholder="Your age" />
-    <input type="number" id="weight" placeholder="Your weight (kg)" />
-    <input type="number" id="height" placeholder="Your height (cm)" />
+    <label>Age</label>
+    <input type="number" id="age" placeholder="e.g. 14" />
+    <label>Weight (kg)</label>
+    <input type="number" id="weight" placeholder="e.g. 66" />
+    <label>Height (cm)</label>
+    <input type="number" id="height" placeholder="e.g. 175" />
+    <label>Fitness level</label>
     <select id="level">
       <option value="complete beginner">Complete beginner</option>
       <option value="intermediate">Intermediate</option>
       <option value="advanced">Advanced</option>
     </select>
-    <button onclick="askCoach()">Get my plan!</button>
-    <div id="ai-response"></div>
+    <button class="btn" onclick="askCoach()">Get my plan!</button>
+    <div class="ai-response" id="ai-response"></div>
   </div>
+</div>
 
+<!-- BMI PAGE -->
+<div id="page-bmi" class="page">
   <div class="card">
-    <h2>Log today's activity</h2>
-    <input type="text" id="exercise" placeholder="Exercise (e.g. Running, Push-ups)" />
-    <input type="number" id="duration" placeholder="Duration (minutes)" />
-    <input type="number" id="calories" placeholder="Calories burned (estimate)" />
-    <button onclick="logActivity()">Log it!</button>
+    <h2>BMI Calculator</h2>
+    <label>Weight (kg)</label>
+    <input type="number" id="bmi-weight" placeholder="e.g. 66" />
+    <label>Height (cm)</label>
+    <input type="number" id="bmi-height" placeholder="e.g. 175" />
+    <button class="btn" onclick="calcBMI()">Calculate BMI</button>
+    <div class="bmi-result" id="bmi-result" style="display:none">
+      <div class="bmi-number" id="bmi-number"></div>
+      <div class="bmi-category" id="bmi-category"></div>
+      <div class="bmi-bar">
+        <div class="bmi-marker" id="bmi-marker"></div>
+      </div>
+      <div id="bmi-advice" style="color:#aaa; font-size:14px; margin-top:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TIMER PAGE -->
+<div id="page-timer" class="page">
+  <div class="card">
+    <h2>Workout Timer</h2>
+    <label>Set time (seconds)</label>
+    <input type="number" id="timer-input" placeholder="e.g. 60" value="60" />
+    <div class="timer-display">
+      <div class="timer-number" id="timer-display">01:00</div>
+    </div>
+    <div class="timer-btns">
+      <button class="btn" onclick="startTimer()">Start</button>
+      <button class="btn btn-outline" onclick="pauseTimer()">Pause</button>
+      <button class="btn btn-red" onclick="resetTimer()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- WATCH / LOG PAGE -->
+<div id="page-watch" class="page">
+  <div class="card">
+    <h2>Log your activity</h2>
+    <p style="color:#888; font-size:13px; margin-bottom:16px;">Check your watch or phone and enter today's stats below.</p>
+    <div class="watch-grid">
+      <div>
+        <label>Exercise type</label>
+        <input type="text" id="exercise" placeholder="e.g. Running" />
+      </div>
+      <div>
+        <label>Duration (mins)</label>
+        <input type="number" id="duration" placeholder="e.g. 30" />
+      </div>
+      <div>
+        <label>Calories burned</label>
+        <input type="number" id="calories" placeholder="e.g. 250" />
+      </div>
+      <div>
+        <label>Steps</label>
+        <input type="number" id="steps" placeholder="e.g. 8000" />
+      </div>
+      <div>
+        <label>Heart rate (avg bpm)</label>
+        <input type="number" id="heartrate" placeholder="e.g. 140" />
+      </div>
+      <div>
+        <label>Distance (km)</label>
+        <input type="number" id="distance" placeholder="e.g. 3.5" />
+      </div>
+    </div>
+    <button class="btn" onclick="logActivity()">Log it!</button>
     <div id="log-status"></div>
   </div>
+</div>
 
+<!-- LOGS PAGE -->
+<div id="page-logs" class="page">
+  <div class="stat-grid" id="stats-grid"></div>
   <div class="card">
-    <h2>My activity log</h2>
-    <button onclick="viewLogs()">Show my logs</button>
+    <h2>Activity history</h2>
+    <button class="btn btn-outline" onclick="viewLogs()" style="width:auto; padding: 8px 20px; margin-bottom:16px;">Refresh logs</button>
     <div id="logs-display"></div>
   </div>
+</div>
 
-  <script>
-    async function askCoach() {
-      const goal = document.getElementById('goal').value;
-      const age = document.getElementById('age').value;
-      const weight = document.getElementById('weight').value;
-      const height = document.getElementById('height').value;
-      const level = document.getElementById('level').value;
-      const details = `Age: ${age}, Weight: ${weight}kg, Height: ${height}cm, Level: ${level}`;
-      document.getElementById('ai-response').innerHTML = '<span class="loading">Your AI coach is thinking...</span>';
-      const res = await fetch('/ask', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({goal, details})
-      });
-      const data = await res.json();
-      document.getElementById('ai-response').textContent = data.response;
+<script>
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    event.target.classList.add('active');
+    if (name === 'logs') viewLogs();
+  }
+
+  async function askCoach() {
+    const goal = document.getElementById('goal').value;
+    const age = document.getElementById('age').value;
+    const weight = document.getElementById('weight').value;
+    const height = document.getElementById('height').value;
+    const level = document.getElementById('level').value;
+    const details = `Age: ${age}, Weight: ${weight}kg, Height: ${height}cm, Level: ${level}`;
+    const box = document.getElementById('ai-response');
+    box.style.display = 'block';
+    box.innerHTML = '<span class="loading">Your AI coach is thinking...</span>';
+    const res = await fetch('/ask', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({goal, details})
+    });
+    const data = await res.json();
+    box.textContent = data.response;
+  }
+
+  function calcBMI() {
+    const weight = parseFloat(document.getElementById('bmi-weight').value);
+    const height = parseFloat(document.getElementById('bmi-height').value) / 100;
+    if (!weight || !height) return;
+    const bmi = (weight / (height * height)).toFixed(1);
+    let category, color, advice;
+    if (bmi < 18.5) { category = 'Underweight'; color = '#74b9ff'; advice = 'Consider a weight gain plan and consult a doctor.'; }
+    else if (bmi < 25) { category = 'Healthy weight'; color = '#00d4aa'; advice = 'Great! Keep up your healthy lifestyle.'; }
+    else if (bmi < 30) { category = 'Overweight'; color = '#fdcb6e'; advice = 'A weight loss plan and regular exercise can help.'; }
+    else { category = 'Obese'; color = '#e17055'; advice = 'Please consult a doctor and consider a structured plan.'; }
+    document.getElementById('bmi-number').textContent = bmi;
+    document.getElementById('bmi-number').style.color = color;
+    document.getElementById('bmi-category').textContent = category;
+    document.getElementById('bmi-category').style.color = color;
+    document.getElementById('bmi-advice').textContent = advice;
+    const pct = Math.min(Math.max((bmi - 15) / 25 * 100, 0), 100);
+    document.getElementById('bmi-marker').style.left = pct + '%';
+    document.getElementById('bmi-result').style.display = 'block';
+  }
+
+  let timerInterval, timerSeconds, timerRunning = false;
+  function updateTimerDisplay(s) {
+    const m = Math.floor(s / 60).toString().padStart(2, '0');
+    const sec = (s % 60).toString().padStart(2, '0');
+    document.getElementById('timer-display').textContent = m + ':' + sec;
+  }
+  function startTimer() {
+    if (timerRunning) return;
+    timerSeconds = timerSeconds ?? parseInt(document.getElementById('timer-input').value);
+    timerRunning = true;
+    timerInterval = setInterval(() => {
+      timerSeconds--;
+      updateTimerDisplay(timerSeconds);
+      if (timerSeconds <= 0
+cat > templates/index.html << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Fitness Coach</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #0f0f0f; color: #f0f0f0; min-height: 100vh; }
+    header { background: #1a1a2e; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #00d4aa; }
+    header h1 { color: #00d4aa; font-size: 22px; }
+    header span { color: #888; font-size: 13px; }
+    nav { background: #16213e; display: flex; gap: 8px; padding: 12px 24px; overflow-x: auto; }
+    nav button { background: transparent; border: 1px solid #333; color: #aaa; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+    nav button.active, nav button:hover { background: #00d4aa; color: #000; border-color: #00d4aa; font-weight: bold; }
+    .page { display: none; padding: 24px; max-width: 800px; margin: 0 auto; }
+    .page.active { display: block; }
+    .card { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+    .card h2 { color: #00d4aa; margin-bottom: 16px; font-size: 18px; }
+    label { display: block; color: #aaa; font-size: 13px; margin-bottom: 4px; margin-top: 12px; }
+    select, input[type="number"], input[type="text"] { width: 100%; padding: 12px; background: #0f0f1a; border: 1px solid #333; border-radius: 8px; color: #f0f0f0; font-size: 15px; }
+    select:focus, input:focus { outline: none; border-color: #00d4aa; }
+    .btn { background: #00d4aa; color: #000; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; margin-top: 16px; width: 100%; }
+    .btn:hover { background: #00b894; }
+    .btn-outline { background: transparent; border: 1px solid #00d4aa; color: #00d4aa; }
+    .btn-outline:hover { background: #00d4aa; color: #000; }
+    .ai-response { background: #0f1a0f; border: 1px solid #00d4aa; border-radius: 8px; padding: 16px; margin-top: 16px; white-space: pre-wrap; line-height: 1.7; font-size: 14px; display: none; }
+    .loading { color: #00d4aa; font-style: italic; text-align: center; padding: 20px; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: #16213e; border-radius: 12px; padding: 16px; text-align: center; border: 1px solid #2a2a4a; }
+    .stat-card .value { font-size: 28px; font-weight: bold; color: #00d4aa; }
+    .stat-card .label { font-size: 12px; color: #888; margin-top: 4px; }
+    .log-entry { border-left: 3px solid #00d4aa; padding: 10px 14px; margin: 8px 0; background: #16213e; border-radius: 0 8px 8px 0; font-size: 14px; }
+    .log-entry .date { color: #888; font-size: 12px; }
+    .success { color: #00d4aa; font-weight: bold; margin-top: 10px; text-align: center; }
+    .error { color: #ff6b6b; margin-top: 10px; text-align: center; }
+    .bmi-result { text-align: center; padding: 20px; }
+    .bmi-number { font-size: 48px; font-weight: bold; color: #00d4aa; }
+    .bmi-category { font-size: 18px; margin-top: 8px; }
+    .bmi-bar { height: 12px; border-radius: 6px; margin: 16px 0; background: linear-gradient(to right, #74b9ff, #00d4aa, #fdcb6e, #e17055); position: relative; }
+    .bmi-marker { position: absolute; top: -4px; width: 20px; height: 20px; background: white; border-radius: 50%; transform: translateX(-50%); border: 2px solid #000; }
+    .timer-display { text-align: center; padding: 20px; }
+    .timer-number { font-size: 72px; font-weight: bold; color: #00d4aa; font-family: monospace; }
+    .timer-btns { display: flex; gap: 12px; margin-top: 16px; }
+    .timer-btns .btn { flex: 1; }
+    .btn-red { background: #e17055; }
+    .btn-red:hover { background: #d63031; }
+    .watch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>AI Fitness Coach</h1>
+  <span>Powered by AI</span>
+</header>
+
+<nav>
+  <button class="active" onclick="showPage('workout')">Workout Plan</button>
+  <button onclick="showPage('bmi')">BMI Calculator</button>
+  <button onclick="showPage('timer')">Workout Timer</button>
+  <button onclick="showPage('watch')">Log Activity</button>
+  <button onclick="showPage('logs')">My Logs</button>
+</nav>
+
+<!-- WORKOUT PAGE -->
+<div id="page-workout" class="page active">
+  <div class="card">
+    <h2>Get your AI workout plan</h2>
+    <label>Your goal</label>
+    <select id="goal">
+      <option value="six pack abs">Six pack abs</option>
+      <option value="lose weight">Lose weight</option>
+      <option value="build chest muscles">Build chest</option>
+      <option value="build arm muscles">Build arms</option>
+      <option value="build leg muscles">Build legs</option>
+      <option value="build back muscles">Build back</option>
+      <option value="custom weight loss plan">Custom weight loss plan</option>
+      <option value="custom weight gain plan">Custom weight gain plan</option>
+    </select>
+    <label>Age</label>
+    <input type="number" id="age" placeholder="e.g. 14" />
+    <label>Weight (kg)</label>
+    <input type="number" id="weight" placeholder="e.g. 66" />
+    <label>Height (cm)</label>
+    <input type="number" id="height" placeholder="e.g. 175" />
+    <label>Fitness level</label>
+    <select id="level">
+      <option value="complete beginner">Complete beginner</option>
+      <option value="intermediate">Intermediate</option>
+      <option value="advanced">Advanced</option>
+    </select>
+    <button class="btn" onclick="askCoach()">Get my plan!</button>
+    <div class="ai-response" id="ai-response"></div>
+  </div>
+</div>
+
+<!-- BMI PAGE -->
+<div id="page-bmi" class="page">
+  <div class="card">
+    <h2>BMI Calculator</h2>
+    <label>Weight (kg)</label>
+    <input type="number" id="bmi-weight" placeholder="e.g. 66" />
+    <label>Height (cm)</label>
+    <input type="number" id="bmi-height" placeholder="e.g. 175" />
+    <button class="btn" onclick="calcBMI()">Calculate BMI</button>
+    <div class="bmi-result" id="bmi-result" style="display:none">
+      <div class="bmi-number" id="bmi-number"></div>
+      <div class="bmi-category" id="bmi-category"></div>
+      <div class="bmi-bar">
+        <div class="bmi-marker" id="bmi-marker"></div>
+      </div>
+      <div id="bmi-advice" style="color:#aaa; font-size:14px; margin-top:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TIMER PAGE -->
+<div id="page-timer" class="page">
+  <div class="card">
+    <h2>Workout Timer</h2>
+    <label>Set time (seconds)</label>
+    <input type="number" id="timer-input" placeholder="e.g. 60" value="60" />
+    <div class="timer-display">
+      <div class="timer-number" id="timer-display">01:00</div>
+    </div>
+    <div class="timer-btns">
+      <button class="btn" onclick="startTimer()">Start</button>
+      <button class="btn btn-outline" onclick="pauseTimer()">Pause</button>
+      <button class="btn btn-red" onclick="resetTimer()">Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- WATCH / LOG PAGE -->
+<div id="page-watch" class="page">
+  <div class="card">
+    <h2>Log your activity</h2>
+    <p style="color:#888; font-size:13px; margin-bottom:16px;">Check your watch or phone and enter today's stats below.</p>
+    <div class="watch-grid">
+      <div>
+        <label>Exercise type</label>
+        <input type="text" id="exercise" placeholder="e.g. Running" />
+      </div>
+      <div>
+        <label>Duration (mins)</label>
+        <input type="number" id="duration" placeholder="e.g. 30" />
+      </div>
+      <div>
+        <label>Calories burned</label>
+        <input type="number" id="calories" placeholder="e.g. 250" />
+      </div>
+      <div>
+        <label>Steps</label>
+        <input type="number" id="steps" placeholder="e.g. 8000" />
+      </div>
+      <div>
+        <label>Heart rate (avg bpm)</label>
+        <input type="number" id="heartrate" placeholder="e.g. 140" />
+      </div>
+      <div>
+        <label>Distance (km)</label>
+        <input type="number" id="distance" placeholder="e.g. 3.5" />
+      </div>
+    </div>
+    <button class="btn" onclick="logActivity()">Log it!</button>
+    <div id="log-status"></div>
+  </div>
+</div>
+
+<!-- LOGS PAGE -->
+<div id="page-logs" class="page">
+  <div class="stat-grid" id="stats-grid"></div>
+  <div class="card">
+    <h2>Activity history</h2>
+    <button class="btn btn-outline" onclick="viewLogs()" style="width:auto; padding: 8px 20px; margin-bottom:16px;">Refresh logs</button>
+    <div id="logs-display"></div>
+  </div>
+</div>
+
+<script>
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    event.target.classList.add('active');
+    if (name === 'logs') viewLogs();
+  }
+
+  async function askCoach() {
+    const goal = document.getElementById('goal').value;
+    const age = document.getElementById('age').value;
+    const weight = document.getElementById('weight').value;
+    const height = document.getElementById('height').value;
+    const level = document.getElementById('level').value;
+    const details = `Age: ${age}, Weight: ${weight}kg, Height: ${height}cm, Level: ${level}`;
+    const box = document.getElementById('ai-response');
+    box.style.display = 'block';
+    box.innerHTML = '<span class="loading">Your AI coach is thinking...</span>';
+    const res = await fetch('/ask', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({goal, details})
+    });
+    const data = await res.json();
+    box.textContent = data.response;
+  }
+
+  function calcBMI() {
+    const weight = parseFloat(document.getElementById('bmi-weight').value);
+    const height = parseFloat(document.getElementById('bmi-height').value) / 100;
+    if (!weight || !height) return;
+    const bmi = (weight / (height * height)).toFixed(1);
+    let category, color, advice;
+    if (bmi < 18.5) { category = 'Underweight'; color = '#74b9ff'; advice = 'Consider a weight gain plan and consult a doctor.'; }
+    else if (bmi < 25) { category = 'Healthy weight'; color = '#00d4aa'; advice = 'Great! Keep up your healthy lifestyle.'; }
+    else if (bmi < 30) { category = 'Overweight'; color = '#fdcb6e'; advice = 'A weight loss plan and regular exercise can help.'; }
+    else { category = 'Obese'; color = '#e17055'; advice = 'Please consult a doctor and consider a structured plan.'; }
+    document.getElementById('bmi-number').textContent = bmi;
+    document.getElementById('bmi-number').style.color = color;
+    document.getElementById('bmi-category').textContent = category;
+    document.getElementById('bmi-category').style.color = color;
+    document.getElementById('bmi-advice').textContent = advice;
+    const pct = Math.min(Math.max((bmi - 15) / 25 * 100, 0), 100);
+    document.getElementById('bmi-marker').style.left = pct + '%';
+    document.getElementById('bmi-result').style.display = 'block';
+  }
+
+  let timerInterval, timerSeconds, timerRunning = false;
+  function updateTimerDisplay(s) {
+    const m = Math.floor(s / 60).toString().padStart(2, '0');
+    const sec = (s % 60).toString().padStart(2, '0');
+    document.getElementById('timer-display').textContent = m + ':' + sec;
+  }
+  function startTimer() {
+    if (timerRunning) return;
+    timerSeconds = timerSeconds ?? parseInt(document.getElementById('timer-input').value);
+    timerRunning = true;
+    timerInterval = setInterval(() => {
+      timerSeconds--;
+      updateTimerDisplay(timerSeconds);
+      if (timerSeconds <= 0) { clearInterval(timerInterval); timerRunning = false; document.getElementById('timer-display').textContent = 'Done!'; }
+    }, 1000);
+  }
+  function pauseTimer() { clearInterval(timerInterval); timerRunning = false; }
+  function resetTimer() {
+    clearInterval(timerInterval); timerRunning = false; timerSeconds = null;
+    const s = parseInt(document.getElementById('timer-input').value);
+    updateTimerDisplay(s);
+  }
+  document.getElementById('timer-input').addEventListener('input', function() {
+    if (!timerRunning) { timerSeconds = null; updateTimerDisplay(parseInt(this.value) || 0); }
+  });
+
+  async function logActivity() {
+    const entry = {
+      exercise: document.getElementById('exercise').value,
+      duration: document.getElementById('duration').value,
+      calories: document.getElementById('calories').value,
+      steps: document.getElementById('steps').value,
+      heartrate: document.getElementById('heartrate').value,
+      distance: document.getElementById('distance').value
+    };
+    await fetch('/log', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(entry)
+    });
+    document.getElementById('log-status').innerHTML = '<p class="success">Logged! Great work today!</p>';
+    ['exercise','duration','calories','steps','heartrate','distance'].forEach(id => document.getElementById(id).value = '');
+  }
+
+  async function viewLogs() {
+    const res = await fetch('/logs');
+    const logs = await res.json();
+    const display = document.getElementById('logs-display');
+    if (logs.length === 0) {
+      display.innerHTML = '<p style="color:#888">No activities logged yet. Get moving!</p>';
+      return;
     }
-
-    async function logActivity() {
-      const exercise = document.getElementById('exercise').value;
-      const duration = document.getElementById('duration').value;
-      const calories = document.getElementById('calories').value;
-      await fetch('/log', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({exercise, duration, calories})
-      });
-      document.getElementById('log-status').innerHTML = '<p class="success">Logged! Great work today!</p>';
-      document.getElementById('exercise').value = '';
-      document.getElementById('duration').value = '';
-      document.getElementById('calories').value = '';
-    }
-
-    async function viewLogs() {
-      const res = await fetch('/logs');
-      const logs = await res.json();
-      const display = document.getElementById('logs-display');
-      if (logs.length === 0) {
-        display.innerHTML = '<p>No activities logged yet. Get moving!</p>';
-      } else {
-        display.innerHTML = logs.map(l =>
-          `<div class="log-entry"><strong>${l.date}</strong> — ${l.exercise} for ${l.duration} mins (${l.calories} cal)</div>`
-        ).join('');
-      }
-    }
-  </script>
-
+    const totalCal = logs.reduce((s, l) => s + (parseInt(l.calories) || 0), 0);
+    const totalMin = logs.reduce((s, l) => s + (parseInt(l.duration) || 0), 0);
+    const totalSteps = logs.reduce((s, l) => s + (parseInt(l.steps) || 0), 0);
+    document.getElementById('stats-grid').innerHTML = `
+      <div class="stat-card"><div class="value">${logs.length}</div><div class="label">Workouts logged</div></div>
+      <div class="stat-card"><div class="value">${totalCal.toLocaleString()}</div><div class="label">Total calories</div></div>
+      <div class="stat-card"><div class="value">${totalMin}</div><div class="label">Total minutes</div></div>
+      <div class="stat-card"><div class="value">${totalSteps.toLocaleString()}</div><div class="label">Total steps</div></div>`;
+    display.innerHTML = logs.slice().reverse().map(l =>
+      `<div class="log-entry">
+        <div class="date">${l.date}</div>
+        <strong>${l.exercise || 'Activity'}</strong> — ${l.duration || 0} mins · ${l.calories || 0} cal · ${l.steps || 0} steps
+      </div>`
+    ).join('');
+  }
+</script>
 </body>
 </html>
