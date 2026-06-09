@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mr Perfect</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #0f0f0f; color: #f0f0f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .container { width: 100%; max-width: 420px; padding: 20px; }
+    .logo { text-align: center; margin-bottom: 32px; }
+    .logo h1 { color: #00d4aa; font-size: 28px; }
+    .logo p { color: #888; font-size: 13px; margin-top: 6px; }
+    .card { background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 16px; padding: 28px; }
+    .tabs { display: flex; margin-bottom: 24px; background: #0f0f0f; border-radius: 10px; padding: 4px; }
+    .tab { flex: 1; padding: 9px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 14px; color: #888; border: none; background: transparent; }
+    .tab.active { background: #00d4aa; color: #000; font-weight: bold; }
+    .form { display: none; }
+    .form.active { display: block; }
+    label { display: block; color: #aaa; font-size: 12px; margin-bottom: 4px; margin-top: 14px; }
+    input { width: 100%; padding: 11px; background: #0f0f0f; border: 1px solid #2a2a4a; border-radius: 8px; color: #f0f0f0; font-size: 14px; }
+    input:focus { outline: none; border-color: #00d4aa; }
+    .btn { background: #00d4aa; color: #000; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; width: 100%; margin-top: 20px; }
+    .btn:hover { background: #00b894; }
+    .error { color: #e17055; font-size: 13px; margin-top: 10px; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <h1>💪 Mr Perfect</h1>
+    <p>Your personal AI fitness coach</p>
+  </div>
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('login')">Log in</button>
+      <button class="tab" onclick="showTab('signup')">Sign up</button>
+    </div>
+    <div class="form active" id="form-login">
+      <label>Username</label>
+      <input type="text" id="login-username" placeholder="your username" />
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="your password" onkeydown="if(event.key==='Enter') doLogin()" />
+      <button class="btn" onclick="doLogin()">Log in</button>
+      <div class="error" id="login-error"></div>
+    </div>
+    <div class="form" id="form-signup">
+      <label>Your name</label>
+      <input type="text" id="signup-name" placeholder="e.g. Vihaank" />
+      <label>Username</label>
+      <input type="text" id="signup-username" placeholder="choose a username" />
+      <label>Password</label>
+      <input type="password" id="signup-password" placeholder="choose a password" onkeydown="if(event.key==='Enter') doSignup()" />
+      <button class="btn" onclick="doSignup()">Create account</button>
+      <div class="error" id="signup-error"></div>
+    </div>
+  </div>
+</div>
+<script>
+  function showTab(tab) {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.form').forEach(function(f) { f.classList.remove('active'); });
+    document.getElementById('form-' + tab).classList.add('active');
+    event.target.classList.add('active');
+  }
+  async function doLogin() {
+    var username = document.getElementById('login-username').value;
+    var password = document.getElementById('login-password').value;
+    var res = await fetch('/login', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username: username, password: password})
+    });
+    var data = await res.json();
+    if (data.error) { document.getElementById('login-error').textContent = data.error; return; }
+    window.location.reload();
+  }
+  async function doSignup() {
+    var name = document.getElementById('signup-name').value;
+    var username = document.getElementById('signup-username').value;
+    var password = document.getElementById('signup-password').value;
+    var res = await fetch('/signup', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name, username: username, password: password})
+    });
+    var data = await res.json();
+    if (data.error) { document.getElementById('signup-error').textContent = data.error; return; }
+    window.location.reload();
+  }
+</script>
+</body>
+</html>
